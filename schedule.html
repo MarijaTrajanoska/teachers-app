@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ teacher }}'s Schedule</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>{{ teacher }}'s Schedule</h1>
+    <div class="calendar">
+        <table>
+            <tr>
+                <th>Time</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+            </tr>
+            {% for day, slots in schedule.items() %}
+            <tr>
+                {% set times = slots.keys() | list %}
+                <td> {{ times[loop.index-1] }} </td>
+
+                    {% for time, subject in slots.items() %}
+                        <td>
+                            <div class="slot">
+                                {{ subject }}
+                                {% if subject == "" %}
+                                    <form action="{{ url_for('request_slot') }}" method="post">
+                                        <input type="hidden" name="teacher" value="{{ teacher }}">
+                                        <input type="hidden" name="day" value="{{ day }}">
+                                        <input type="hidden" name="slot" value="{{ time }}">
+                                        <input type="submit" value="Request">
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>
