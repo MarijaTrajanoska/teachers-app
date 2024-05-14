@@ -1,46 +1,104 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ teacher }}'s Schedule</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>{{ teacher }}'s Schedule</h1>
-    <div class="calendar">
-        <table>
-            <tr>
-                <th>Time</th>
-                <th>Monday</th>
-                <th>Tuesday</th>
-                <th>Wednesday</th>
-                <th>Thursday</th>
-                <th>Friday</th>
-            </tr>
-            {% for day, slots in schedule.items() %}
-            <tr>
-                {% set times = slots.keys() | list %}
-                <td> {{ times[loop.index-1] }} </td>
+{% extends 'base.html' %}
 
-                    {% for time, subject in slots.items() %}
-                        <td>
-                            <div class="slot">
-                                {{ subject }}
-                                {% if subject == "" %}
-                                    <form action="{{ url_for('request_slot') }}" method="post">
-                                        <input type="hidden" name="teacher" value="{{ teacher }}">
-                                        <input type="hidden" name="day" value="{{ day }}">
-                                        <input type="hidden" name="slot" value="{{ time }}">
-                                        <input type="submit" value="Request">
-                                    </form>
-                                {% endif %}
-                            </div>
-                        </td>
-                    {% endfor %}
-                </tr>
+{% block title %}{{ teacher }}'s Schedule{% endblock %}
+
+{% block body %}
+<h1>{{ teacher }}'s Schedule</h1>
+<div class="calendar">
+    <table>
+        <tr>
+            <th>Time</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>Wednesday</th>
+            <th>Thursday</th>
+            <th>Friday</th>
+        </tr>
+        {% for day, slots in schedule.items() %}
+        <tr>
+            {% for time, subject in slots.items() %}
+            <td>
+                <div class="slot">
+                    {{ subject }}
+                    {% if subject == "" %}
+                    <!-- Button that triggers the modal -->
+                    <button onclick="showModal('{{ teacher }}', '{{ day }}', '{{ time }}')">Request</button>
+                    {% endif %}
+                </div>
+            </td>
             {% endfor %}
-        </table>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<!-- The Modal -->
+<div id="requestModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Request Help</h2> <!-- Modal Title -->
+        <form action="{{ url_for('request_slot') }}" method="post">
+            <input type="hidden" id="modalTeacher" name="teacher">
+            <input type="hidden" id="modalDay" name="day">
+            <input type="hidden" id="modalTime" name="time">
+            <input type="text" id="title" name="title">
+            <label for="urgency">Select Urgency:</label>
+            <select name="urgency">
+                <option value="Normal">Normal</option>
+                <option value="Urgent">Urgent</option>
+            </select>
+            <button type="submit">Send Request</button>
+            <button type="button" onclick="closeModal()">Cancel</button>
+        </form>
     </div>
-</body>
-</html>
+</div>
+
+<style>
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+
+<script>
+function showModal(teacher, day, time) {
+    document.getElementById('modalTeacher').value = teacher;
+    document.getElementById('modalDay').value = day;
+    document.getElementById('modalTime').value = time;
+    document.getElementById('requestModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('requestModal').style.display = 'none';
+}
+</script>
+{% endblock %}
