@@ -1,12 +1,26 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1>Welcome {{ session['username'] }}</h1>
 
-{% block title %}Home{% endblock %}
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('manage_requests') }}">Requests</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
 
-{% block body %}
-<h1>Teachers</h1>
-<ul>
-    {% for teacher in teachers %}
-        <li><a href="{{ url_for('schedule', teacher=teacher) }}">{{ teacher }}</a></li>
-    {% endfor %}
-</ul>
-{% endblock %}
+    <h2>Teacher Schedules</h2>
+    <ul>
+        {% for teacher in teachers %}
+            <li><a href="{{ url_for('schedule', teacher=teacher) }}">{{ teacher }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
