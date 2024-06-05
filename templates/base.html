@@ -9,10 +9,8 @@
 <body>
     <div class="navbar">
         <a href="{{ url_for('index') }}">Home</a>
-        {% if 'teacher_name' in session %}
         <a href="{{ url_for('manage_requests') }}">Requests</a>
         <a href="{{ url_for('logout') }}">Logout</a>
-        {% endif %}
     </div>
     {% block body %}{% endblock %}
 </body>
