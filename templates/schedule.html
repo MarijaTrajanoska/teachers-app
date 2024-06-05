@@ -14,9 +14,10 @@
             <th>Thursday</th>
             <th>Friday</th>
         </tr>
-        {% for day, slots in schedule.items() %}
+        {% for time, slots in schedule.items() %}
         <tr>
-            {% for time, subject in slots.items() %}
+            <td>{{ time }}</td>
+            {% for day, subject in slots.items() %}
             <td>
                 <div class="slot">
                     {{ subject }}
@@ -41,7 +42,16 @@
             <input type="hidden" id="modalTeacher" name="teacher">
             <input type="hidden" id="modalDay" name="day">
             <input type="hidden" id="modalTime" name="time">
-            <input type="text" id="title" name="title">
+            
+            <!-- Dropdown list for request type -->
+            <label for="title">Request Type:</label>
+            <select id="title" name="title">
+                <option value="Lecture Help">Lecture Help</option>
+                <option value="Administrative Work">Administrative Work</option>
+                <option value="Meetings">Meetings</option>
+                <option value="Other">Other</option>
+            </select>
+            
             <label for="urgency">Select Urgency:</label>
             <select name="urgency">
                 <option value="Normal">Normal</option>
