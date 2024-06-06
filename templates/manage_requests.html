@@ -4,20 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Requests</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <h1>Requests for {{ teacher }}</h1>
-    <ul>
-        {% for req in requests %}
-        <li>
-            Request from {{ req['requesting_teacher'] }} for {{ req['request_title'] }} at {{ req['time'] }} on {{ req['day'] }} - {{ req['urgency'] }}
-            <form action="{{ url_for('handle_request', req_id=req['request_id']) }}" method="post">
-                <input type="submit" name="response" value="Accept">
-                <input type="submit" name="response" value="Reject">
-            </form>
-        </li>
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('schedule', teacher=teacher) }}">Back to Schedule</a>
+    <div class="container">
+        <h1>Requests for {{ teacher }}</h1>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="status-message">
+                <ul>
+                    {% for message in messages %}
+                        <li style="color: green">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% endwith %}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Requesting Teacher</th>
+                    <th>Request Title</th>
+                    <th>Time</th>
+                    <th>Day</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>{{ req['requesting_teacher'] }}</td>
+                    <td>{{ req['request_title'] }}</td>
+                    <td>{{ req['time'] }}</td>
+                    <td>{{ req['day'] }}</td>
+                    <td>{{ req['urgency'] }}</td>
+                    <td>{{ req.get('status', 'Pending') }}</td>
+                    <td>
+                        <form action="{{ url_for('handle_request', req_id=req['request_id']) }}" method="post">
+                            <input type="submit" name="response" value="Accept" class="accept-btn">
+                            <input type="submit" name="response" value="Reject" class="reject-btn">
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('schedule', teacher=teacher) }}" class="back-btn">Back to Schedule</a>
+    </div>
 </body>
+<style>
+    /* Styles for the container */
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    /* Styles for the status message */
+    .status-message {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #d4edda;
+        color: #155724;
+        border-radius: 4px;
+    }
+
+    /* Styles for the table */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    /* Styles for the action buttons */
+    .accept-btn,
+    .reject-btn,
+    .back-btn {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        text-decoration: none;
+    }
+
+    .accept-btn:hover,
+    .reject-btn:hover,
+    .back-btn:hover {
+        background-color: #0056b3;
+    }
+
+</style>
 </html>
