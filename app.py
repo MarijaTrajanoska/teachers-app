@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 import secrets
@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(8)  # Needed for session management
+
 
 # Configure Flask-Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -68,7 +69,10 @@ requests = []
 def index():
     if 'user_id' not in session:
         return render_template('login.html')
-    return render_template("index.html", teachers=teachers)
+     # Calculate notification count
+    notification_count = len([req for req in requests if req['requested_teacher'] == session['username']])
+
+    return render_template("index.html", teachers=teachers, notification_count=notification_count)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -80,7 +84,7 @@ def login():
             session['user_id'] = user.id
             session['username'] = user.username
             return redirect(url_for('index'))
-        return 'Invalid credentials'
+        return render_template("login.html", error="Invalid credentials. Please try again.")
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -117,7 +121,9 @@ def logout():
 
 @app.route('/schedule/<teacher>')
 def schedule(teacher):
-    return render_template('schedule.html', teacher=teacher, schedule=teacher_schedules[teacher])
+    relevant_requests = [req for req in requests if req['requested_teacher'] == session['username']]
+    notification_count = len(relevant_requests)
+    return render_template('schedule.html', teacher=teacher, schedule=teacher_schedules[teacher], notification_count=notification_count)
 
 @app.route('/manage_requests')
 def manage_requests():
@@ -125,7 +131,8 @@ def manage_requests():
         return redirect(url_for('index'))
     
     relevant_requests = [req for req in requests if req['requested_teacher'] == session['username']]
-    return render_template('manage_requests.html', requests=relevant_requests, teacher=session['username'])
+    notification_count = len(relevant_requests)
+    return render_template('manage_requests.html', requests=relevant_requests, teacher=session['username'], notification_count=notification_count)
 
 @app.route('/handle_request/<req_id>', methods=['POST'])
 def handle_request(req_id):
@@ -138,11 +145,32 @@ def handle_request(req_id):
         teacher = session['username']
         day = schedule_req['day']
         time = schedule_req['time']
-        teacher_schedules[teacher][time].update({day: schedule_req['request_title']})
-    
+        request_title = schedule_req['request_title']
+        teacher_schedules[teacher][time].update({day: request_title})
+
+        # Update the schedule with the name of the request sender
+        sender_name = schedule_req['requesting_teacher']
+        teacher_schedules[teacher][time][day] = f"{request_title} ({sender_name})"
+
+        # Send notification to the request sender
+        send_notification(teacher_emails[schedule_req['requesting_teacher']], f"Your request for {request_title} for {teacher} on {day} at {time} has been accepted.")
+
+        flash(f"Request for {request_title} has been accepted.")
+
+    else:
+        send_notification(teacher_emails[schedule_req['requesting_teacher']], f"Your request for {request_title} for {teacher} on {day} at {time} has been rejected.")
+        flash(f"Request for {request_title} has been rejected.")
+
     requests.remove(schedule_req)
         
     return redirect(url_for('manage_requests'))
+
+
+def send_notification(email, message):
+    msg = Message("Request Status Notification", recipients=[email])
+    msg.body = message
+    mail.send(msg)
+
 
 @app.route('/request_slot', methods=['POST'])
 def request_slot():
@@ -165,10 +193,16 @@ def request_slot():
     }
     requests.append(request_info)
 
-    # Send email notification
-    send_email_notification(req_teacher, request_info)
+    try:
+        # Send email notification
+        send_email_notification(req_teacher, request_info)
+
+        flash('Your request has been sent successfully!', 'success')
+    except Exception as exc:
+        flash('Error sending your request', 'error')
 
     return redirect(url_for('schedule', teacher=req_teacher))
+
 
 def send_email_notification(teacher, request_info):
     recipient_email = teacher_emails.get(teacher)
