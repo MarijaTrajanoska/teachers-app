@@ -3,24 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #007bff;
+            padding: 15px 0;
+            text-align: center;
+        }
+
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            color: #f8f9fa;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .card a {
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .card a:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
+    <div class="navbar">
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+        <a href="{{ url_for('manage_requests') }}">
+            <i class="fas fa-envelope"></i> Requests 
+            {% if notification_count > 0 %}
+                <span class="notification-counter">{{ notification_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+
     <h1>Welcome {{ session['username'] }}</h1>
 
-    <nav>
-        <ul>
-            <li><a href="{{ url_for('index') }}">Home</a></li>
-            <li><a href="{{ url_for('manage_requests') }}">Requests</a></li>
-            <li><a href="{{ url_for('logout') }}">Logout</a></li>
-        </ul>
-    </nav>
-
-    <h2>Teacher Schedules</h2>
-    <ul>
+    <div class="container">
         {% for teacher in teachers %}
-            <li><a href="{{ url_for('schedule', teacher=teacher) }}">{{ teacher }}</a></li>
+            <div class="card">
+                <h2>{{ teacher }}</h2>
+                <p>View {{ teacher }}'s schedule</p>
+                <a href="{{ url_for('schedule', teacher=teacher) }}">View Schedule</a>
+            </div>
         {% endfor %}
-    </ul>
+    </div>
 </body>
 </html>
