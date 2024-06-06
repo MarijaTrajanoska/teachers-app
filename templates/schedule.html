@@ -3,112 +3,211 @@
 {% block title %}{{ teacher }}'s Schedule{% endblock %}
 
 {% block body %}
-<h1>{{ teacher }}'s Schedule</h1>
-<div class="calendar">
-    <table>
-        <tr>
-            <th>Time</th>
-            <th>Monday</th>
-            <th>Tuesday</th>
-            <th>Wednesday</th>
-            <th>Thursday</th>
-            <th>Friday</th>
-        </tr>
-        {% for time, slots in schedule.items() %}
-        <tr>
-            <td>{{ time }}</td>
-            {% for day, subject in slots.items() %}
-            <td>
-                <div class="slot">
-                    {{ subject }}
-                    {% if subject == "" %}
-                    <!-- Button that triggers the modal -->
-                    <button onclick="showModal('{{ teacher }}', '{{ day }}', '{{ time }}')">Request</button>
-                    {% endif %}
-                </div>
-            </td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </table>
-</div>
+<div class="container">
+    <h1>{{ teacher }}'s Schedule</h1>
 
-<!-- The Modal -->
-<div id="requestModal" class="modal" style="display:none;">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Request Help</h2> <!-- Modal Title -->
-        <form action="{{ url_for('request_slot') }}" method="post">
-            <input type="hidden" id="modalTeacher" name="teacher">
-            <input type="hidden" id="modalDay" name="day">
-            <input type="hidden" id="modalTime" name="time">
-            
-            <!-- Dropdown list for request type -->
-            <label for="title">Request Type:</label>
-            <select id="title" name="title">
-                <option value="Lecture Help">Lecture Help</option>
-                <option value="Administrative Work">Administrative Work</option>
-                <option value="Meetings">Meetings</option>
-                <option value="Other">Other</option>
-            </select>
-            
-            <label for="urgency">Select Urgency:</label>
-            <select name="urgency">
-                <option value="Normal">Normal</option>
-                <option value="Urgent">Urgent</option>
-            </select>
-            <button type="submit">Send Request</button>
-            <button type="button" onclick="closeModal()">Cancel</button>
-        </form>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="status-message">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="calendar">
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for time, slots in schedule.items() %}
+                    <tr>
+                        <td>{{ time }}</td>
+                        {% for day, subject in slots.items() %}
+                            <td>
+                                <div class="slot">
+                                    {% if teacher != session['username'] %}
+                                        {% if subject == "" %}
+                                            <!-- Button that triggers the modal -->
+                                            <button onclick="showModal('{{ teacher }}', '{{ day }}', '{{ time }}')" class="request-btn">Request</button>
+                                        {% else %}
+                                            {{ subject }}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if subject == "" %}
+                                            <!-- Button that triggers the modal -->
+                                            <button disabled class="schedule-btn">Request</button>
+                                        {% elif subject != "" %}
+                                            {{ subject }}
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- The Modal -->
+    <div id="requestModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Request Help</h2> <!-- Modal Title -->
+            <form action="{{ url_for('request_slot') }}" method="post">
+                <input type="hidden" id="modalTeacher" name="teacher">
+                <input type="hidden" id="modalDay" name="day">
+                <input type="hidden" id="modalTime" name="time">
+                
+                <!-- Dropdown list for request type -->
+                <label for="title">Request Type:</label>
+                <select id="title" name="title">
+                    <option value="Lecture Help">Lecture Help</option>
+                    <option value="Administrative Work">Administrative Work</option>
+                    <option value="Meetings">Meetings</option>
+                    <option value="Other">Other</option>
+                </select>
+                
+                <label for="urgency">Select Urgency:</label>
+                <select name="urgency">
+                    <option value="Normal">Normal</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+                <button type="submit" class="send-request-btn">Send Request</button>
+                <button type="button" onclick="closeModal()" class="cancel-btn">Cancel</button>
+            </form>
+        </div>
     </div>
 </div>
 
 <style>
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-}
+    /* Styles for the calendar */
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* 15% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
-}
+    .calendar {
+        margin-top: 20px;
+        overflow-x: auto;
+    }
 
-.close {
-    color: #aaaaaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-.close:hover,
-.close:focus {
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-}
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    .slot {
+        position: relative;
+    }
+
+    /* Styles for the modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        border-radius: 8px;
+    }
+
+    .close {
+        color: #aaaaaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #000;
+        text-decoration: none;
+    }
+
+    /* Styles for the buttons */
+    .request-btn,
+    .schedule-btn,
+    .send-request-btn,
+    .cancel-btn {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .request-btn:hover,
+    .schedule-btn:hover,
+    .send-request-btn:hover,
+    .cancel-btn:hover {
+        background-color: #0056b3;
+    }
+
+    .request-btn:disabled,
+    .schedule-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    /* Styles for the status message */
+    .status-message {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #d4edda;
+        color: #155724;
+        border-radius: 4px;
+    }
+
+
 </style>
 
 <script>
-function showModal(teacher, day, time) {
-    document.getElementById('modalTeacher').value = teacher;
-    document.getElementById('modalDay').value = day;
-    document.getElementById('modalTime').value = time;
-    document.getElementById('requestModal').style.display = 'block';
-}
+    function showModal(teacher, day, time) {
+        document.getElementById('modalTeacher').value = teacher;
+        document.getElementById('modalDay').value = day;
+        document.getElementById('modalTime').value = time;
+        document.getElementById('requestModal').style.display = 'block';
+    }
 
-function closeModal() {
-    document.getElementById('requestModal').style.display = 'none';
-}
+    function closeModal() {
+        document.getElementById('requestModal').style.display = 'none';
+    }
 </script>
 {% endblock %}
